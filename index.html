@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarjimon Bot - Web App</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7V10C2 16 6 21.5 12 22C18 21.5 22 16 22 10V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h1>Tarjimon Bot</h1>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle" class="theme-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Translation Form -->
+            <div class="translation-section">
+                <div class="language-selector">
+                    <div class="language-input">
+                        <label for="fromLang">Qaysi tildan:</label>
+                        <select id="fromLang" class="lang-select">
+                            <option value="auto">🔍 Avtomatik aniqlash</option>
+                            <option value="uz">🇺🇿 O'zbek</option>
+                            <option value="en">🇺🇸 Ingliz</option>
+                            <option value="ru">🇷🇺 Rus</option>
+                            <option value="fr">🇫🇷 Fransuz</option>
+                            <option value="de">🇩🇪 Nemis</option>
+                            <option value="es">🇪🇸 Ispan</option>
+                            <option value="ar">🇸🇦 Arab</option>
+                            <option value="tr">🇹🇷 Turk</option>
+                            <option value="ja">🇯🇵 Yapon</option>
+                            <option value="ko">🇰🇷 Koreys</option>
+                            <option value="zh">🇨🇳 Xitoy</option>
+                            <option value="hi">🇮🇳 Hindi</option>
+                        </select>
+                    </div>
+
+                    <button id="swapLangs" class="swap-btn" title="Tillarni almashtirish">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17 8L21 12L17 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 16L3 12L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+
+                    <div class="language-output">
+                        <label for="toLang">Qaysi tilga:</label>
+                        <select id="toLang" class="lang-select">
+                            <option value="uz">🇺🇿 O'zbek</option>
+                            <option value="en">🇺🇸 Ingliz</option>
+                            <option value="ru">🇷🇺 Rus</option>
+                            <option value="fr">🇫🇷 Fransuz</option>
+                            <option value="de">🇩🇪 Nemis</option>
+                            <option value="es">🇪🇸 Ispan</option>
+                            <option value="ar">🇸🇦 Arab</option>
+                            <option value="tr">🇹🇷 Turk</option>
+                            <option value="ja">🇯🇵 Yapon</option>
+                            <option value="ko">🇰🇷 Koreys</option>
+                            <option value="zh">🇨🇳 Xitoy</option>
+                            <option value="hi">🇮🇳 Hindi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="text-areas">
+                    <div class="input-area">
+                        <textarea id="inputText"
+                                  placeholder="Bu yerga tarjima qilimoqchi bo'lgan matningizni yozing..."
+                                  maxlength="5000"></textarea>
+                        <div class="text-actions">
+                            <button id="clearBtn" class="action-btn clear-btn" title="Tozalash">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <span class="char-count">0/5000</span>
+                        </div>
+                    </div>
+
+                    <div class="output-area">
+                        <div id="outputText" class="output-text">
+                            Tarjima bu yerda ko'rinadi...
+                        </div>
+                        <div class="text-actions">
+                            <button id="copyBtn" class="action-btn copy-btn" title="Nusxalash">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M5 15H4A2 2 0 0 1 2 13V4A2 2 0 0 1 4 2H13A2 2 0 0 1 15 4V5" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </button>
+                            <button id="shareBtn" class="action-btn share-btn" title="Ulashish">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 12V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V12" stroke="currentColor" stroke-width="2"/>
+                                    <polyline points="16,6 12,2 8,6" stroke="currentColor" stroke-width="2"/>
+                                    <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="translateBtn" class="translate-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 8L3 12L5 16M19 8L21 12L19 16M11 4L7 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Tarjima qilish
+                </button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Tez amallar</h3>
+                <div class="action-buttons">
+                    <button class="quick-btn" data-action="favorites">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Sevimlilar
+                    </button>
+                    <button class="quick-btn" data-action="history">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Tarix
+                    </button>
+                    <button class="quick-btn" data-action="file">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6A2 2 0 0 0 4 4V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V8Z" stroke="currentColor" stroke-width="2"/>
+                            <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Fayl yuklash
+                    </button>
+                    <button class="quick-btn" data-action="voice">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 1A3 3 0 0 0 9 4V12A3 3 0 0 0 15 12V4A3 3 0 0 0 12 1Z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M19 10V12A7 7 0 0 1 5 12V10" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Ovozli
+                    </button>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div id="historySection" class="history-section" style="display: none;">
+                <h3>Tarjima tarixi</h3>
+                <div id="historyList" class="history-list">
+                    <!-- History items will be populated here -->
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div id="fileSection" class="file-section" style="display: none;">
+                <h3>Fayl tarjima qilish</h3>
+                <div class="file-upload">
+                    <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                    <div class="upload-area" id="uploadArea">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 15V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V15" stroke="currentColor" stroke-width="2"/>
+                            <polyline points="17,8 12,3 7,8" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <p>Faylni bu yerga tashlang yoki tanlash uchun bosing</p>
+                        <p class="file-info">Faqat .txt fayllar qabul qilinadi</p>
+                    </div>
+                    <div id="fileProgress" class="file-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <p>Fa</p>yl qayta ishlanmoqda...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Tarjimon Bot. Barcha huquqlar himoyalangan.</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Tarjima qilinmoqda...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="static/js/app.js"></script>
+</body>
+</html>
