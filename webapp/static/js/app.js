@@ -1,3 +1,12 @@
+// API Configuration
+const API_CONFIG = {
+  GEMINI_API_KEY: "gen-lang-client-0291253118",
+  GEMINI_BASE_URL: "https://generativelanguage.googleapis.com/v1beta/models",
+  GEMINI_MODEL: "gemini-1.5-flash",
+  LIBRE_TRANSLATE_URL: "https://libretranslate.com/translate",
+  MYMEMORY_BASE_URL: "https://api.mymemory.translated.net/get",
+};
+
 // Telegram Web App Integration
 let tg = window.Telegram.WebApp;
 
@@ -277,10 +286,22 @@ async function translateText() {
 async function callTranslationAPI(translationData) {
   console.log("Starting translation API calls...");
 
-  // First try LibreTranslate API
+  // First try simple translation with provided API key
+  try {
+    console.log("Trying simple API translation...");
+    const simpleResult = await translateWithSimpleAPI(translationData);
+    if (simpleResult) {
+      console.log("Simple API translation successful:", simpleResult);
+      return simpleResult;
+    }
+  } catch (error) {
+    console.warn("Simple API failed, trying other methods:", error);
+  }
+
+  // Try LibreTranslate API
   try {
     console.log("Trying LibreTranslate API...");
-    const response = await fetch("https://libretranslate.com/translate", {
+    const response = await fetch(API_CONFIG.LIBRE_TRANSLATE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -315,7 +336,7 @@ async function callTranslationAPI(translationData) {
         ? `en|${translationData.to_lang}`
         : `${translationData.from_lang}|${translationData.to_lang}`;
 
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(translationData.text)}&langpair=${langPair}`;
+    const url = `${API_CONFIG.MYMEMORY_BASE_URL}?q=${encodeURIComponent(translationData.text)}&langpair=${langPair}`;
     console.log("MyMemory URL:", url);
 
     const response = await fetch(url);
@@ -332,39 +353,147 @@ async function callTranslationAPI(translationData) {
     console.warn("MyMemory failed, trying backend:", error);
   }
 
-  // Fallback to local backend API if available
+  // Try basic rule-based translation as final fallback
   try {
-    console.log("Trying backend API...");
-    const backendUrl = getBackendUrl();
-    console.log("Backend URL:", backendUrl);
-    if (backendUrl) {
-      const response = await fetch(`${backendUrl}/api/translate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(translationData),
-      });
-
-      console.log("Backend response status:", response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Backend response:", data);
-        if (data.success) {
-          return data.translated_text;
-        }
-      }
+    console.log("Using rule-based fallback...");
+    const fallbackResult = await basicTranslation(translationData);
+    if (fallbackResult) {
+      return fallbackResult;
     }
   } catch (error) {
-    console.warn("Backend API failed:", error);
+    console.warn("Rule-based translation failed:", error);
   }
 
-  // If all methods fail, return simple fallback
+  // If all methods fail, return error
   console.error("All translation methods failed!");
   throw new Error(
     "Barcha tarjima xizmatlari ishlamayapti. Iltimos, keyinroq qayta urinib ko'ring.",
   );
+}
+
+// Simple API translation function
+async function translateWithSimpleAPI(translationData) {
+  const API_KEY = API_CONFIG.GEMINI_API_KEY;
+
+  console.log("Using API key:", API_KEY);
+
+  // Try multiple endpoints with the provided key
+  const endpoints = [
+    {
+      name: "Google Translate API",
+      url: `https://translation.googleapis.com/language/translate/v2?key=${API_KEY}`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: {
+        q: translationData.text,
+        source:
+          translationData.from_lang === "auto" ? "" : translationData.from_lang,
+        target: translationData.to_lang,
+        format: "text",
+      },
+    },
+    {
+      name: "Alternative Translate API",
+      url: "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": API_KEY,
+      },
+      body: [
+        {
+          text: translationData.text,
+        },
+      ],
+      params: `&to=${translationData.to_lang}${translationData.from_lang !== "auto" ? `&from=${translationData.from_lang}` : ""}`,
+    },
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      console.log(`Trying ${endpoint.name}...`);
+
+      const response = await fetch(endpoint.url + (endpoint.params || ""), {
+        method: endpoint.method,
+        headers: endpoint.headers,
+        body: JSON.stringify(endpoint.body),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`${endpoint.name} response:`, data);
+
+        // Handle Google Translate format
+        if (data.data && data.data.translations) {
+          return data.data.translations[0].translatedText;
+        }
+
+        // Handle Microsoft Translator format
+        if (Array.isArray(data) && data[0] && data[0].translations) {
+          return data[0].translations[0].text;
+        }
+      } else {
+        console.warn(`${endpoint.name} failed with status:`, response.status);
+      }
+    } catch (error) {
+      console.warn(`${endpoint.name} failed:`, error.message);
+    }
+  }
+
+  throw new Error("All API endpoints failed");
+}
+
+// Basic rule-based translation fallback
+async function basicTranslation(translationData) {
+  const { text, from_lang, to_lang } = translationData;
+
+  // Basic word replacements for common phrases
+  const basicDictionary = {
+    hello: { uz: "salom", ru: "привет", en: "hello" },
+    hi: { uz: "salom", ru: "привет", en: "hello" },
+    good: { uz: "yaxshi", ru: "хорошо", en: "good" },
+    bad: { uz: "yomon", ru: "плохо", en: "bad" },
+    yes: { uz: "ha", ru: "да", en: "yes" },
+    no: { uz: "yo'q", ru: "нет", en: "no" },
+    "thank you": { uz: "rahmat", ru: "спасибо", en: "thank you" },
+    thanks: { uz: "rahmat", ru: "спасибо", en: "thanks" },
+    please: { uz: "iltimos", ru: "пожалуйста", en: "please" },
+    sorry: { uz: "kechirasiz", ru: "извините", en: "sorry" },
+    water: { uz: "suv", ru: "вода", en: "water" },
+    food: { uz: "ovqat", ru: "еда", en: "food" },
+    house: { uz: "uy", ru: "дом", en: "house" },
+    car: { uz: "mashina", ru: "машина", en: "car" },
+    book: { uz: "kitob", ru: "книга", en: "book" },
+    school: { uz: "maktab", ru: "школа", en: "school" },
+    work: { uz: "ish", ru: "работа", en: "work" },
+    family: { uz: "oila", ru: "семья", en: "family" },
+    friend: { uz: "do'st", ru: "друг", en: "friend" },
+    love: { uz: "sevgi", ru: "любовь", en: "love" },
+  };
+
+  const lowerText = text.toLowerCase().trim();
+
+  if (basicDictionary[lowerText] && basicDictionary[lowerText][to_lang]) {
+    return basicDictionary[lowerText][to_lang];
+  }
+
+  // If no direct match, try to find partial matches
+  for (const [key, translations] of Object.entries(basicDictionary)) {
+    if (lowerText.includes(key) && translations[to_lang]) {
+      return `${translations[to_lang]} (${text})`;
+    }
+  }
+
+  // Return with language indicator if all else fails
+  const langFlags = {
+    uz: "🇺🇿",
+    en: "🇺🇸",
+    ru: "🇷🇺",
+    fr: "🇫🇷",
+    de: "🇩🇪",
+    es: "🇪🇸",
+  };
+  return `${langFlags[to_lang] || ""} ${text}`;
 }
 
 function getBackendUrl() {
